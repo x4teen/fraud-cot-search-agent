@@ -1,0 +1,18 @@
+# core (CPU is enough for data, classical baselines, evaluation and tests)
+numpy>=1.26
+pandas>=2.1
+scipy>=1.11
+scikit-learn>=1.4
+xgboost==3.4.1          # pinned: model selection on the validation split depends on it
+joblib>=1.3
+matplotlib>=3.8
+pytest>=8
+# LLM backends
+anthropic>=1.0          # Claude oracle (needs ANTHROPIC_API_KEY)
+sentence-transformers>=3.0   # E5 retriever for technique cards (TF-IDF fallback if absent)
+# open-model backend, GPU runtime
+torch>=2.4
+transformers>=4.56
+accelerate>=1.0
+bitsandbytes>=0.45      # only for 4-bit loading on <30 GB GPUs
+# optional, faster on A100:  pip install vllm

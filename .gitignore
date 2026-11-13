@@ -1,0 +1,11 @@
+# secrets
+.env
+*.key
+# data: downloaded on first run (see data/README.md)
+data/*.csv
+results/agent_mock_*
+__pycache__/
+*.pyc
+.ipynb_checkpoints/
+.pytest_cache/
+.DS_Store
