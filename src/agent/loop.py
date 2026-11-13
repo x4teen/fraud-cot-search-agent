@@ -1,10 +1,11 @@
 """Order-controlled search agent (CP3 core method).
 
 Adapted from the Search-R1 rollout (Jin et al., 2025, Algorithm 1) without RL
-training: the frozen model interleaves <think> reasoning with <search> calls,
+training: the frozen model interleaves <reasoning> steps with <search> calls,
 retrieved text is appended inside <information> (conditioned on, not
 generated), and the episode ends at <answer> or when the search budget B is
-spent. The reasoning-order condition c is placed in the <think> instruction, so
+spent. The reasoning-order condition c is placed in the reasoning instruction (and
+the first reasoning block is pre-filled), so
 one loop serves every c.
 
 Open models run through a text backend in batched lock-step (all active
@@ -22,7 +23,7 @@ from dataclasses import dataclass, field
 
 from ..llm_baseline import parse as parse_cp2
 from .backends import ANSWER_RE, SEARCH_RE
-from .prompts import SYSTEM, build_prompt, split
+from .prompts import SYSTEM, build_prompt, prefill, split
 from .tools import Case, ToolBox, item_focus
 
 log = logging.getLogger(__name__)
@@ -72,7 +73,8 @@ class SearchAgent:
         _, knowledge = split(condition)
         ctx, ids = tools.static_context() if knowledge == "static" else (None, [])
         prompt = build_prompt(case.packet, condition, self.B, ctx)
-        return Session(case, condition, prompt, self.backend.format(SYSTEM, prompt), tools, ids)
+        return Session(case, condition, prompt, self.backend.format(SYSTEM, prompt), tools, ids,
+                       out=prefill(condition))
 
     def _step(self, s: Session, y: str) -> None:
         """Apply one model continuation `y` to session `s` (Algorithm 1 body)."""
@@ -91,6 +93,8 @@ class SearchAgent:
                 return
             tool, query = m[-1].group(1), m[-1].group(2)
             text, ids, item = s.tools.run(tool, query)
+            if tool.strip().lower() not in s.tools.TOOLS:
+                s.malformed += 1
             s.searches.append({"turn": len(s.searches) + 1, "tool": tool.lower(), "query": query,
                                "item": item, "focus": item_focus(item), "ids": ids})
             s.out += f"\n<information>{text}</information>\n"

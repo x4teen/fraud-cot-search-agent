@@ -214,7 +214,9 @@ class ToolBox:
         if tool == "cards":
             t, ids = self.cards_search(query)
             return t, ids, None
-        return f"Unknown tool '{tool}'. Use history, benchmark or cards.", [], None
+        return (f"Invalid search: '{tool}' is not a tool. Write the tool name first, for "
+                f"example <search>history: receivables</search>, <search>benchmark: soft "
+                f"assets</search> or <search>cards: inventory build-up</search>.", [], None)
 
     def static_context(self, n_cards: int = 6) -> tuple[str, list[str]]:
         """Static RAG: a fixed bundle chosen without the model.

@@ -34,15 +34,30 @@ ORDER_TEXT = {
     "qual": f"(1) {QUAL_BLOCK}; (2) {PERF_BLOCK}; (3) {FIN_BLOCK}",
 }
 
-TOOL_HELP = """You can look things up before answering. To search, write exactly one line
-<search>TOOL: QUERY</search>
-and stop. The result will appear inside <information>...</information>. Tools:
-  history: ITEM     the same company's values for years t-3 to t (e.g. history: receivables)
-  benchmark: ITEM   where the company's year-t ratio sits among all firm-years in a
-                    reference period (e.g. benchmark: soft assets)
-  cards: TEXT       forensic-accounting techniques relevant to a pattern
-                    (e.g. cards: receivables growing faster than sales)
-You may search at most {budget} times. Search only when it helps your judgment."""
+TOOL_HELP = """You can look things up while you reason. To search, write one search line and stop.
+The first word is the tool name (history, benchmark or cards), then a colon, then what you
+want to look up. Examples of valid searches:
+<search>history: receivables</search>
+<search>benchmark: soft assets</search>
+<search>cards: receivables growing faster than sales</search>
+The tools:
+- history: the same company's values of one item for years t-3 to t
+- benchmark: the percentile of the company's year-t value of one ratio among all
+  firm-years in a reference period
+- cards: forensic-accounting techniques relevant to a pattern you describe
+The result appears inside <information>...</information>; then continue reasoning.
+You may search at most {budget} times. Search only when it would change your judgment,
+and never repeat a search you already made."""
+
+
+# The model's output is pre-filled with the opening of its reasoning, so every CoT
+# session really starts with the block its order prescribes (instructions alone were
+# ignored by Qwen3-8B on the dev split: it answered without reasoning).
+PREFILL = {"perf": "<reasoning>\n(1) Performance:", "qual": "<reasoning>\n(1) Earnings quality:"}
+
+
+def prefill(condition: str) -> str:
+    return PREFILL.get(split(condition)[0], "")
 
 
 def split(condition: str) -> tuple[str, str]:
@@ -72,11 +87,11 @@ def build_prompt(packet: str, condition: str, budget: int = 4,
                      f"{ORDER_TEXT[order]}. Reply with the JSON object only, inside "
                      f"<answer>...</answer>.")
     else:
-        parts.append(f"Reason inside <think>...</think>, working through the evidence in "
-                     f"this order: {ORDER_TEXT[order]}. Then give the JSON object inside "
-                     f"<answer>...</answer>.")
+        parts.append(f"Reason step by step inside <reasoning>...</reasoning>, working through "
+                     f"the evidence in this order: {ORDER_TEXT[order]}. Then give the JSON "
+                     f"object inside <answer>...</answer>.")
     parts.append(f"JSON format:\n{SCHEMA}")
     return "\n\n".join(parts)
 
 
-__all__ = ["SYSTEM", "CONDITIONS", "ORDERS", "KNOWLEDGE", "build_prompt", "split"]
+__all__ = ["SYSTEM", "CONDITIONS", "ORDERS", "KNOWLEDGE", "build_prompt", "prefill", "split"]

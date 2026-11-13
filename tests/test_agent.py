@@ -150,3 +150,22 @@ def test_record_schema(case, box):
                 "risk_score", "searches", "raw_output"):
         assert key in rec
     json.dumps(rec, default=str)
+
+
+def test_cot_output_is_prefilled_with_its_first_block(case, box):
+    (p,) = SearchAgent(MockBackend()).run([case], "perf-none", {case.case_id: box})
+    (q,) = SearchAgent(MockBackend()).run([case], "qual-none", {case.case_id: box})
+    assert p["raw_output"].startswith("<reasoning>\n(1) Performance:")
+    assert q["raw_output"].startswith("<reasoning>\n(1) Earnings quality:")
+    (d,) = SearchAgent(MockBackend()).run([case], "direct-none", {case.case_id: box})
+    assert not d["raw_output"].startswith("<reasoning>")
+
+
+def test_literal_template_search_gets_corrective_message(box):
+    text, ids, _ = box.run("TOOL", "HISTORY")
+    assert ids == [] and "<search>history: receivables</search>" in text
+
+
+def test_prompt_has_no_placeholder_template(case):
+    p = build_prompt(case.packet, "qual-agent")
+    assert "TOOL: QUERY" not in p and "<search>history: receivables</search>" in p

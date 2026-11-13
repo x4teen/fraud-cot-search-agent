@@ -54,7 +54,7 @@ class HFBackend:
 
     def format(self, system: str, user: str) -> str:
         msgs = [{"role": "system", "content": system}, {"role": "user", "content": user}]
-        try:  # Qwen3: built-in thinking off, our own <think> instruction applies
+        try:  # Qwen3: built-in thinking off; our own <reasoning> instruction applies
             return self.tok.apply_chat_template(msgs, tokenize=False, add_generation_prompt=True,
                                                 enable_thinking=False)
         except TypeError:
@@ -118,18 +118,18 @@ class MockBackend:
         packet = user.split("Assess whether", 1)[0]
         h = int(hashlib.md5(packet.encode()).hexdigest(), 16) % 81
         n_search = prefix.count("\n<information>")
-        agent = "<search>TOOL: QUERY</search>" in prefix
+        agent = "Examples of valid searches" in prefix
         perf_first = "(1) performance" in prefix
         if agent and n_search < 2:
             q = ["history: receivables", "benchmark: soft assets"][n_search]
             if perf_first:
                 q = ["history: sales", "benchmark: ROA"][n_search]
-            return f"<think>Check {q.split(': ')[1]}.</think>\n<search>{q}</search>"
+            return f" check {q.split(': ')[1]}.\n<search>{q}</search>"
         score = h + (-5 if perf_first else 5 if "(1) earnings quality" in prefix else 0)
         score = max(0, min(100, score + 10))
         ans = {"risk_score": score, "red_flag": score >= 50, "warning_type": "none",
                "rationale": "mock output"}
-        return f"<think>mock reasoning</think>\n<answer>{json.dumps(ans)}</answer>"
+        return f" mock reasoning</reasoning>\n<answer>{json.dumps(ans)}</answer>"
 
 
 class ClaudeBackend:

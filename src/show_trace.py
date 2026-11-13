@@ -9,7 +9,7 @@ import json
 import re
 import textwrap
 
-COLORS = {"think": "\033[90m", "search": "\033[94m", "information": "\033[33m", "answer": "\033[92m"}
+COLORS = {"reasoning": "\033[90m", "think": "\033[90m", "search": "\033[94m", "information": "\033[33m", "answer": "\033[92m"}
 END = "\033[0m"
 
 
@@ -17,12 +17,20 @@ def show(rec: dict, width: int = 110) -> None:
     print(f"\n{'=' * width}\n{rec['case_id']}  condition={rec['condition']}  true label="
           f"{'later-AAER' if rec['label'] else 'no AAER'}  searches={rec['n_search']}  "
           f"risk={rec['risk_score']}  flag={rec['red_flag']}\n{'=' * width}")
-    for tag, body in re.findall(r"<(think|search|information|answer)>(.*?)(?:</\1>|$)",
-                                rec["raw_output"], flags=re.S):
-        col = COLORS[tag]
-        wrapped = textwrap.fill(" ".join(body.split()), width - 4, subsequent_indent="    ")
+    # walk the output tag by tag; text outside search/information/answer is reasoning
+    parts = re.split(r"(</?(?:reasoning|think|search|information|answer)>)", rec["raw_output"])
+    tag = "reasoning"
+    for p in parts:
+        m = re.fullmatch(r"<(/?)(\w+)>", p)
+        if m:
+            tag = "reasoning" if m.group(1) else m.group(2)
+            continue
+        body = " ".join(p.split())
+        if not body:
+            continue
+        col = COLORS.get(tag, "")
+        wrapped = textwrap.fill(body, width - 4, subsequent_indent="    ")
         print(f"{col}[{tag}] {wrapped}{END}")
-
 
 if __name__ == "__main__":
     ap = argparse.ArgumentParser()
