@@ -169,3 +169,17 @@ def test_literal_template_search_gets_corrective_message(box):
 def test_prompt_has_no_placeholder_template(case):
     p = build_prompt(case.packet, "qual-agent")
     assert "TOOL: QUERY" not in p and "<search>history: receivables</search>" in p
+
+
+def test_check_run_reads_a_results_file(case, box, tmp_path, capsys):
+    from src.check_run import main as check_run
+    agent = SearchAgent(MockBackend())
+    recs = []
+    for cond in ("perf-none", "qual-none", "perf-agent", "qual-agent"):
+        recs += [dict(r, latency_s=1.0) for r in agent.run([case], cond, {case.case_id: box})]
+    f = tmp_path / "run.jsonl"
+    f.write_text("\n".join(json.dumps(r, default=str) for r in recs))
+    check_run(str(f))
+    out = capsys.readouterr().out
+    assert "parse rate 100%" in out
+    assert "identical on how many cases (of 1): {'none': 0, 'agent': 0}" in out

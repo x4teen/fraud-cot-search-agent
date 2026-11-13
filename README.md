@@ -36,6 +36,7 @@ Can a large language model screen financial statements for signs of material mis
 │   ├── run_agent.py                 runs the condition grid on the same cases
 │   ├── evaluate_agent.py            comparison table, order bias, knowledge gain, bootstrap CIs, figures
 │   ├── evaluate.py                  CP2 evaluation
+│   ├── check_run.py                 sanity check of a results file (parse rate, order effect, searches)
 │   └── show_trace.py                pretty-prints an agent session
 ├── scripts/
 │   ├── demo.sh                      one-command demo (training snapshot + 4-case agent batch)
@@ -85,6 +86,7 @@ cd fraud-cot-search-agent
 python -m venv .venv && source .venv/bin/activate      # Python 3.10+
 pip install -r requirements.txt
 export ANTHROPIC_API_KEY=...                           # only for the Claude oracle
+export ANTHROPIC_WORKSPACE_ID=wrkspc_...               # only if the key is not workspace-scoped
 ```
 
 A GPU with 24 GB or more runs Qwen3-8B in bf16. On a 16 GB GPU, set `HF_4BIT=1`. Everything else runs on a CPU. On Google Colab, open `notebooks/cp3_search_agent_colab.ipynb` and run the cells in order.
@@ -120,6 +122,9 @@ python -m src.train_classical
 
 # 2) dev split, used only to fit the red-flag threshold
 python -m src.run_agent --backend hf --model Qwen/Qwen3-8B --split dev --n 20
+
+#    sanity-check it before the full run
+python -m src.check_run results/agent_hf_Qwen-Qwen3-8B_dev.jsonl
 
 # 3) full condition grid on the out-of-sample test cases
 python -m src.run_agent --backend hf --model Qwen/Qwen3-8B --split test --n 60

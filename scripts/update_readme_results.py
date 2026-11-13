@@ -24,7 +24,7 @@ def main() -> None:
     ob = T / "order_bias.csv"
     if ob.exists() and ob.stat().st_size > 5:
         d = pd.read_csv(ob)[["model", "knowledge", "n_pairs", "mean_delta", "delta_lo", "delta_hi",
-                             "mean_abs_delta", "reversal_rate", "wilcoxon_p"]]
+                             "mean_abs_delta", "share_changed", "reversal_rate", "wilcoxon_p"]]
         parts += ["\n**Reasoning-order effect** Δ = risk(perf-first) − risk(quality-first):\n", fmt(d),
                   "\n![Order effect](results/figures/order_delta.png)\n"]
     sg = T / "search_gain.csv"

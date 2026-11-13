@@ -114,7 +114,11 @@ def order_bias(llm: pd.DataFrame, taus: dict, tau0: float, B: int) -> pd.DataFra
         d = (w.perf - w.qual).to_numpy()
         lab = w.index.get_level_values("label").to_numpy()
         tp, tq = taus.get((m, f"perf-{k}"), tau0), taus.get((m, f"qual-{k}"), tau0)
-        rev = ((w.perf >= tp) != (w.qual >= tq)).mean()
+        # own-threshold reversals mix the order effect with the two dev thresholds;
+        # the common-threshold rate (mean of the two) isolates the order effect
+        rev_own = ((w.perf >= tp) != (w.qual >= tq)).mean()
+        tc = (tp + tq) / 2
+        rev = ((w.perf >= tc) != (w.qual >= tc)).mean()
         n = len(d)
         try:
             p = wilcoxon(d, zero_method="zsplit").pvalue if np.any(d != 0) else 1.0
@@ -127,7 +131,8 @@ def order_bias(llm: pd.DataFrame, taus: dict, tau0: float, B: int) -> pd.DataFra
                      "mean_abs_delta": np.abs(d).mean(),
                      "abs_lo": boot_ci(lambda i: np.abs(d[i]).mean(), [], n, B)[0],
                      "abs_hi": boot_ci(lambda i: np.abs(d[i]).mean(), [], n, B)[1],
-                     "reversal_rate": rev, "wilcoxon_p": p})
+                     "reversal_rate": rev, "reversal_own_tau": rev_own, "tau_perf": tp,
+                     "tau_qual": tq, "share_changed": float((d != 0).mean()), "wilcoxon_p": p})
     return pd.DataFrame(rows)
 
 

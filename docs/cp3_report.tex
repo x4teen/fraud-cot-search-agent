@@ -26,8 +26,8 @@
 \twocolumn[{%
 \centering
 {\large\bfseries Checkpoint 3: An Order-Controlled Search Agent for Misstatement-Risk Screening}\\[2pt]
-{\small Ryan Khan \quad IDAI-780, Fall 2026 \quad Instructor: Zhiqiang Tao \quad Code: \tbd{github.com/\textless user\textgreater/fraud-cot-search-agent}}\\[3pt]
-\includegraphics[width=0.66\textwidth]{../assets/framework.png}\\[-2pt]
+{\small Ryan Khan \quad IDAI-780, Fall 2026 \quad Instructor: Zhiqiang Tao \quad Code: \href{https://github.com/x4teen/fraud-cot-search-agent}{github.com/x4teen/fraud-cot-search-agent}}\\[3pt]
+\includegraphics[width=0.6\textwidth]{../assets/framework.png}\\[-2pt]
 {\footnotesize Figure 1: Framework. A frozen LLM reasons in order $c$ and, in the agent setting, issues up to $B{=}4$ searches to three leakage-safe tools before answering; outputs are scored with the same metrics as the classical baselines.}\\[4pt]
 }]
 
@@ -38,13 +38,13 @@
 \begin{equation}
 \pi_m(\tau\mid x_i;c)=\prod_{t=1}^{T}\pi_m\!\left(t_t,q_t\mid x_i,c,\tau_{<t}\right),\quad T\le B,
 \end{equation}
-where $t_t$ is a \texttt{<think>} step and $q_t$ a \texttt{<search>} call to one of three tools. \texttt{history} returns the firm's own $t{-}3..t$ values scaled by $\lambda_i$. \texttt{benchmark} returns the percentile of a ratio among 1991--2001 firm-years. \texttt{cards} returns the top-3 of 30 technique cards,
+where $t_t$ is a \texttt{<reasoning>} step and $q_t$ a \texttt{<search>} call to one of three tools. \texttt{history} returns the firm's own $t{-}3..t$ values scaled by $\lambda_i$. \texttt{benchmark} returns the percentile of a ratio among 1991--2001 firm-years. \texttt{cards} returns the top-3 of 30 technique cards,
 \begin{equation}
 D_t=\operatorname{TopK}_{d\in\mathcal{T}}\cos\big(\phi(q_t),\phi(d)\big),
 \end{equation}
 where $\phi$ is the E5 encoder. Each $D_t$ is inserted inside \texttt{<information>}; the model conditions on it but does not generate it. The answer gives a risk score $s_i^{m,c,k}\in[0,100]$ and a red flag $r_i=\mathbb{1}[s_i\ge\theta_{m,c,k}]$, with $\theta$ chosen to maximize F1 on a disjoint dev split (2000--01 cases).
 
-\textbf{Hypotheses.} \emph{H1 (order bias):} $\Delta_i^{m,k}=s_i^{m,\mathrm{P},k}-s_i^{m,\mathrm{Q},k}$ is negative, i.e.\ reasoning that starts from performance anchors on the headline numbers. We report mean $\Delta$, $|\Delta|$, the red-flag reversal rate $\rho$, and a Wilcoxon signed-rank test. \emph{H3 (knowledge):} $G^{m,c}=\mathrm{AUPRC}(\mathrm{A})-\mathrm{AUPRC}(\mathrm{S})>0$, and $|\Delta^{\mathrm{A}}|<|\Delta^{\varnothing}|$. The agent's own queries can show the mechanism: we measure the share of lookups aimed at quality items under each order.
+\textbf{Hypotheses.} \emph{H1 (order bias):} $\Delta_i^{m,k}=s_i^{m,\mathrm{P},k}-s_i^{m,\mathrm{Q},k}$ is negative, i.e.\ reasoning that starts from performance anchors on the headline numbers. We report mean $\Delta$, $|\Delta|$, the red-flag reversal rate $\rho$, and a Wilcoxon signed-rank test. \emph{H3 (knowledge):} $G^{m,c}=\mathrm{AUPRC}(\mathrm{A})-\mathrm{AUPRC}(\mathrm{S})>0$, and $|\Delta^{\mathrm{A}}|<|\Delta^{\varnothing}|$.
 
 \begin{algorithm}[h]
 \caption{Order-controlled search agent (batched)}
@@ -71,21 +71,24 @@ B0 & random & 0.58 & 0.57 & -- \\
 B1 & logistic, 14 ratios & 0.62 & 0.59 & -- \\
 B2 & XGBoost, 28 items & \textbf{0.76} & \textbf{0.76} & -- \\
 \midrule
-Qwen3-8B & D, $\varnothing$ (CP2 Direct) & \tbd{--} & \tbd{--} & -- \\
- & P\,/\,Q, $\varnothing$ (CoT) & \tbd{--} & \tbd{--} & \tbd{--} \\
- & P\,/\,Q, S (static RAG) & \tbd{--} & \tbd{--} & \tbd{--} \\
- & \textbf{P\,/\,Q, A (agent)} & \tbd{--} & \tbd{--} & \tbd{--} \\
-Claude & same grid & \tbd{--} & \tbd{--} & \tbd{--} \\
+Qwen3-8B & D, $\varnothing$ (CP2 Direct) & 0.53 & 0.53 & -- \\
+ & P\,/\,Q, $\varnothing$ (CoT) & 0.57\,/\,0.61 & 0.55\,/\,0.58 & 3.8 \\
+ & P\,/\,Q, S (static RAG) & 0.51\,/\,0.45 & 0.52\,/\,0.50 & 6.6 \\
+ & \textbf{P\,/\,Q, A (agent)} & 0.51\,/\,0.53 & 0.51\,/\,0.52 & 5.6 \\
+Claude & D, $\varnothing$ & 0.53 & 0.57 & -- \\
+Sonnet 5.5 & P\,/\,Q, $\varnothing$ (CoT) & 0.53\,/\,0.53 & 0.54\,/\,0.57 & 4.2 \\
+ & P\,/\,Q, S (static RAG) & 0.54\,/\,0.54 & 0.59\,/\,0.54 & 4.1 \\
+ & \textbf{P\,/\,Q, A (agent)} & 0.56\,/\,0.55 & 0.58\,/\,0.60 & 5.4 \\
 \bottomrule
 \end{tabular}
 \caption{The same 60 balanced out-of-sample test cases (30 later-AAER). Values have 95\% case-bootstrap CIs (in repo). On the full test set (35,166 firm-years) B2 reaches AUC 0.725 and AUPRC 0.015 against a prevalence of 0.0074, in line with Bao et al.'s RUSBoost ($\approx$0.71).}
 \end{table}
 \vspace{-6pt}
-\noindent\textbf{Qualitative.} Classical models see only numbers, so order cannot affect them. Static RAG gives every case the same bundle. The agent chooses what to check and every check is logged, so we can ask \emph{why} order matters: does performance-first reasoning lead to fewer quality checks?
+\noindent\textbf{Findings.} (i) B2 remains best. Every LLM setting has an AUPRC CI that includes the random level (0.50); the best are Qwen quality-first CoT (AUC 0.61 vs.\ 0.53 Direct) and Claude quality-first agent (AUPRC 0.60 [0.43, 0.75]). (ii) \emph{H1:} the order effect appears only when the model searches. Mean $\Delta$ with the agent is $-2.6$ for Qwen ($[-5.7, 0.0]$, $p{=}0.29$) and $-2.0$ for Claude ($[-4.0, -0.1]$, Wilcoxon $p{=}0.04$, uncorrected for six tests); without retrieval it is near zero for both ($-0.1$, $+0.5$). (iii) \emph{H3 is not supported:} no agent-vs-static gain $G$ has a CI that excludes zero (Claude quality-first $+0.05$ [$-0.03$, 0.12]); for Qwen, retrieval raises $|\Delta|$ (3.8 $\to$ 5.6--6.6). (iv) \emph{Mechanism:} the order steers the searches. Quality-first raises the share of lookups on earnings-quality items (Qwen 40\% $\to$ 46\%, Claude 43\% $\to$ 56\%), and Claude searches 70\% more (1.05 vs.\ 0.62 per case). Limits: $n{=}60$; Qwen uses 3--5 distinct scores.
 
 \section{Implementation Details}
-\textbf{Training (B2).} XGBoost minimizes $\sum_i w_{y_i}\ell(y_i,f(z_i))+\Omega(f)$ with $w_1=n_0/n_1$. Hyperparameters are chosen on fit 1991--97 $\to$ validation 2000--01 over depth $\{3,4,6\}\times$ trees $\{200,400\}$ (learning rate 0.05, row and column subsample 0.8). The selected setting (depth 3, 200 trees) is refit on 1991--2001 with median imputation and 1/99\% winsorizing fit on training rows only. We log per-round log loss, AUC and AUPRC, save checkpoints every 50 rounds, and score the test years once.
-\textbf{LLM testing.} Qwen3-8B runs in bf16 with Transformers on one \tbd{A100}, with greedy decoding, built-in thinking off, at most 1{,}024 new tokens per step, and batched lock-step rollouts (16 sessions per batch). Claude runs the same tools through native API tool use at effort low (D) or high (CoT), since it does not write out its reasoning. Static RAG covers 4 history items, 13 ratio benchmarks and the top-6 cards. Every session logs the case, condition, prompt hash, queries, retrieved IDs, malformed or forced flags and raw output. There are 13 unit tests covering the parser, budget cutoff, rethink path, leakage guards, retrieval determinism, prompt symmetry and schema. Uncertainty comes from 1{,}000 case-bootstrap resamples, paired across conditions.
+\textbf{Training (B2).} XGBoost minimizes $\sum_i w_{y_i}\ell(y_i,f(z_i))+\Omega(f)$ with $w_1=n_0/n_1$. Hyperparameters are chosen on fit 1991--97 $\to$ validation 2000--01 over depth $\{3,4,6\}\times$ trees $\{200,400\}$ (learning rate 0.05, row and column subsample 0.8). The selected setting (depth 3, 200 trees) is refit on 1991--2001 with median imputation and 1/99\% winsorizing fit on training rows only. Per-round loss/AUC/AUPRC and checkpoints every 50 rounds are saved; test years are scored once.
+\textbf{LLM testing.} Qwen3-8B runs in bf16 with Transformers on one A100 (80 GB), with greedy decoding, built-in thinking off, at most 1{,}024 new tokens per step, and batched lock-step rollouts (16 sessions per batch). Claude runs the same tools through native API tool use at effort low (D) or high (CoT), since it does not write out its reasoning. Each session logs prompt hash, queries, retrieved IDs and raw output; 16 unit tests cover parsing, budget, leakage, determinism and prompt symmetry. Uncertainty comes from 1{,}000 case-bootstrap resamples, paired across conditions.
 
 \vspace{-4pt}
 {\footnotesize

@@ -1,6 +1,7 @@
 """Pretty-print agent sessions from a results file (for the demo video).
 
-Usage:  python -m src.show_trace results/agent_hf_Qwen-Qwen3-8B_test_demo.jsonl [--case test_000] [--condition qual-agent]
+Usage:  python -m src.show_trace results/agent_hf_Qwen-Qwen3-8B_test_demo.jsonl \
+            [--case test_000] [--condition qual-agent] [--min-searches 1] [--max 1]
 """
 from __future__ import annotations
 
@@ -38,9 +39,12 @@ if __name__ == "__main__":
     ap.add_argument("--case")
     ap.add_argument("--condition")
     ap.add_argument("--max", type=int, default=2)
+    ap.add_argument("--min-searches", type=int, default=0,
+                    help="only show sessions with at least this many searches")
     a = ap.parse_args()
     recs = [json.loads(l) for l in open(a.path)]
     recs = [r for r in recs if (not a.case or r["case_id"] == a.case)
-            and (not a.condition or r["condition"] == a.condition)]
+            and (not a.condition or r["condition"] == a.condition)
+            and r.get("n_search", 0) >= a.min_searches]
     for r in recs[: a.max]:
         show(r)

@@ -44,6 +44,15 @@ def parse_answer(text: str) -> dict | None:
     return parse_cp2(text)
 
 
+def _claude_client():
+    """Anthropic client. Keys that are not scoped to a workspace (e.g. some
+    organization keys) need the workspace ID header: set ANTHROPIC_WORKSPACE_ID."""
+    import os
+    import anthropic
+    ws = os.getenv("ANTHROPIC_WORKSPACE_ID")
+    return anthropic.Anthropic(default_headers={"anthropic-workspace-id": ws} if ws else None)
+
+
 @dataclass
 class Session:
     case: Case
@@ -141,7 +150,7 @@ class SearchAgent:
 
     def _claude_session(self, case, condition, tools, model, eff_d, eff_c, max_tokens) -> dict:
         import anthropic
-        client = anthropic.Anthropic()
+        client = _claude_client()
         order, knowledge = split(condition)
         ctx, ids = tools.static_context() if knowledge == "static" else (None, [])
         prompt = build_prompt(case.packet, condition, self.B, ctx, native_tools=True)

@@ -12,4 +12,4 @@ ls results/checkpoints/B2_xgboost_raw28
 echo "== 3. agent demo batch (4 cases, perf-first vs quality-first)"
 python -m src.run_agent --backend "$BACKEND" --model "$MODEL" --n 4 \
        --conditions perf-agent qual-agent --verbose --run-tag demo
-python -m src.show_trace "results/agent_${BACKEND}_${TAG}_test_demo.jsonl" --condition qual-agent --max 1
+python -m src.show_trace "results/agent_${BACKEND}_${TAG}_test_demo.jsonl" --condition qual-agent --min-searches 1 --max 1
