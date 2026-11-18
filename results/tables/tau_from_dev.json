@@ -1,0 +1,16 @@
+{
+  "Qwen3-8B|direct-none": 75.0,
+  "Qwen3-8B|perf-agent": 85.0,
+  "Qwen3-8B|perf-none": 75.0,
+  "Qwen3-8B|perf-static": 75.0,
+  "Qwen3-8B|qual-agent": 75.0,
+  "Qwen3-8B|qual-none": 75.0,
+  "Qwen3-8B|qual-static": 75.0,
+  "claude-sonnet-5-5|direct-none": 62.0,
+  "claude-sonnet-5-5|perf-agent": 30.0,
+  "claude-sonnet-5-5|perf-none": 22.0,
+  "claude-sonnet-5-5|perf-static": 12.0,
+  "claude-sonnet-5-5|qual-agent": 22.0,
+  "claude-sonnet-5-5|qual-none": 12.0,
+  "claude-sonnet-5-5|qual-static": 22.0
+}

@@ -1,0 +1,15 @@
+{
+  "backend": "hf",
+  "model": "Qwen/Qwen3-8B",
+  "split": "test",
+  "n": 4,
+  "seed": 11,
+  "budget": 4,
+  "top_k": 3,
+  "retriever": "e5:intfloat/e5-base-v2",
+  "conditions": [
+    "perf-agent",
+    "qual-agent"
+  ],
+  "started": "2026-11-14 01:08:11"
+}

@@ -1,0 +1,20 @@
+{
+  "backend": "claude",
+  "model": "claude-sonnet-5-5",
+  "split": "test",
+  "n": 60,
+  "seed": 11,
+  "budget": 4,
+  "top_k": 3,
+  "retriever": "e5:intfloat/e5-base-v2",
+  "conditions": [
+    "direct-none",
+    "perf-none",
+    "qual-none",
+    "perf-static",
+    "qual-static",
+    "perf-agent",
+    "qual-agent"
+  ],
+  "started": "2026-11-13 14:34:07"
+}
